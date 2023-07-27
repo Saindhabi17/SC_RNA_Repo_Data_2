@@ -141,6 +141,8 @@ DimPlot(harmonized_seurat_data_2,
         reduction = "umap")
 dev.off()
 ```
+![harmony_UMAP_y_sample_data_2](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/d340fe8a-bc71-4cd6-8b1c-6b4c431d3704)
+
 ## Clusters with Labels: 
 ```
 #________________________SuperCluster Identification____________#
@@ -152,6 +154,8 @@ DimPlot(harmonized_seurat_data_2,
         label.size = 6)
 dev.off()
 ```
+![harmony_umap_cluster_with_label_data_2](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/4897f9fc-329e-4053-8d99-10220c2e41c2)
+
 ## Marker Identification: 
 ```
 # let's visualize cells expressing supercluster markers:
@@ -169,7 +173,9 @@ FeaturePlot(object = harmonized_seurat_data_2,
 
 dev.off()
 ```
+![umap_superCluster_cells_data_2](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/961b7603-e86e-4883-bf6f-bcb5f12a831c)
 
+### Visualising All Markers:
 ```
 #______________________________ All markers________________________________
 # Find markers for every cluster compared to all remaining cells, report only the positive ones
@@ -219,6 +225,18 @@ plotList[[1]]
 dev.off()
 ```
 [Cluster0](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/commit/e78e7852dba825a293ad641675d6a3bd9d5a079d#r122897224)
+[Cluster1]
+[Cluster2]
+[Cluster3]
+[Cluster4]
+[Cluster5]
+[Cluster6]
+[Cluster7]
+[Cluster8]
+[Cluster9]
+[Cluster10]
+[Cluster11]
+[Cluster12]
 
 ```
 # LYZ cells
@@ -232,6 +250,8 @@ FeaturePlot(object = harmonized_seurat_data_2,
             repel = TRUE)
 dev.off()
 ```
+![LYZ_harmony_blca_clsuter_marker_data_2](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/3c177009-e5b0-4b93-bcce-4deb32e0385a)
+
 ## Renaming the Clusters:
 ```
 # renaming clusters
@@ -261,3 +281,4 @@ DimPlot(object = harmonized_seurat_data_2,
         repel = TRUE)
 dev.off()
 ```
+![harmont_blca_umap_with_label_data_2](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/0fea68cb-a5a9-4f74-a93f-9339884b4261)
