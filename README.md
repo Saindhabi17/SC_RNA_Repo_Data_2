@@ -230,7 +230,7 @@ dev.off()
 [Cluster3](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/commit/e78e7852dba825a293ad641675d6a3bd9d5a079d#r122899321) ; 
 [Cluster4](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/commit/e78e7852dba825a293ad641675d6a3bd9d5a079d#r122899358) ; 
 [Cluster5](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/commit/e78e7852dba825a293ad641675d6a3bd9d5a079d#r122899411) ; 
-[Cluster6]
+[Cluster6](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/commit/e78e7852dba825a293ad641675d6a3bd9d5a079d#r122899517) ; 
 [Cluster7]
 [Cluster8]
 [Cluster9]
