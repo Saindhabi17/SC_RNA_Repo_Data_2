@@ -160,7 +160,7 @@ dev.off()
 
 
 
-## With the Conplete Data Set: (Can be modified upon completing the previous steps) 
+## With the Complete Data Set: (Can be modified upon completing the previous steps) 
 Here all the 8 samples are used. 
 
 ## Reading the Files and Preparing Seurat Object: 
