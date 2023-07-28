@@ -282,3 +282,106 @@ DimPlot(object = harmonized_seurat_data_2,
 dev.off()
 ```
 ![harmont_blca_umap_with_label_data_2](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/0fea68cb-a5a9-4f74-a93f-9339884b4261)
+
+# Analysis with the Same Data Set - only the tumours:
+## Reading Files: 
+Only the tumour samples are taken in account here. There are 6 samples now. 
+```
+#________________________Reading the files______________________#
+# create list of samples
+samples_data_2_n <- list.files("/Users/andrew/Documents/Saindhabi/Data_2/")
+
+# read files into Seurat objects
+for (file in samples_data_2_n){
+  print(paste0(file))
+  seurat_data_2_n <- Read10X(data.dir <- paste0("/Users/andrew/Documents/Saindhabi/Data_2/", file))
+  seurat_obj_2_n <- CreateSeuratObject(counts = seurat_data_2_n, 
+                                     min.features = 100, 
+                                     project = file)
+  assign(file, seurat_obj_2_n)
+}
+
+# updated sample name 
+samples_2_n <- samples_data_2_n[-c(3,4)]
+
+# now merging all objects into one Seurat obj 
+# There are 7 tumor samples and 1 normal (SRR14615558) sample in this cohort
+# Here we are working with 6 tumor samples for the time being.
+merged_seurat_data_2_n <- merge(x = SRR9897621,
+                              y = c(SRR9897623,
+                                    SRR9897624,
+                                    SRR9897625,
+                                    SRR12539462,
+                                    SRR12539463),
+                              add.cell.id = samples_2_n)
+```
+## Quality Control
+
+```
+# Explore merged metadata
+View(merged_seurat_data_2_n@meta.data)
+
+#Add number of genes per UMI for each cell to metadata
+merged_seurat_data_2_n$log10GenesPerUMI <- log10(merged_seurat_data_2_n$nFeature_RNA) / log10(merged_seurat_data_2_n$nCount_RNA)
+
+# Compute percent mito ratio
+merged_seurat_data_2_n$mitoRatio <- PercentageFeatureSet(object = merged_seurat_data_2_n, pattern = "^MT-")
+merged_seurat_data_2_n$mitoRatio <- merged_seurat_data_2_n@meta.data$mitoRatio / 100
+
+# Create metadata dataframe
+metadata_2_n <- merged_seurat_data_2_n@meta.data
+# Add cell IDs to metadata
+metadata_2_n$cells <- rownames(metadata_2_n)
+
+# adding sample type to metadata. The orginal file could be download from SRA explorer
+SampleType_n <- c("BC1", "BC3", "BC4", "BC5", "BC6", "BC7")
+
+names(SampleType_n) <- c("SRR9897621", "SRR9897623", "SRR9897624", "SRR9897625", "SRR12539462", "SRR12539463")
+
+metadata_2_n$sampleType <- stringr::str_replace_all(metadata_2_n$orig.ident, SampleType_n)
+
+# Rename columns
+metadata_2_n <- metadata_2_n %>%
+  dplyr::rename(seq_folder = orig.ident,
+                nUMI = nCount_RNA,
+                nGene = nFeature_RNA,
+                sample = sampleType)
+
+# Add metadata back to Seurat object
+merged_seurat_data_2_n@meta.data <- metadata_2_n
+
+# Create .RData object to load at any time
+save(merged_seurat_data_2_n, file="merged_filtered_seurat_data_2_n.RData")
+```
+
+## Visualization
+
+### Cell counts per sample 
+```
+# Visualize the number of cell counts per sample
+png(filename = "cell_counts_before_QC.png", width = 16, height = 8.135, units = "in", res = 300)
+bqcc <- metadata_2_n %>% 
+  ggplot(aes(x=seq_folder, fill=sample)) + 
+  geom_bar() +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  theme(plot.title = element_text(hjust=0.5, face="bold")) +
+  ggtitle("NCells before QC")
+dev.off()
+```
+### UMI per cell
+```
+# Visualize the number UMIs/transcripts per cell
+png(filename = "UMI_per_Transcript.png", width = 16, height = 8.135, units = "in", res = 300)
+metadata_2_n %>% 
+  ggplot(aes(x=nUMI, fill= sample)) + 
+  geom_density(alpha = 0.5) + 
+  scale_x_log10() + 
+  theme_classic() +
+  ylab("Cell density") +
+  facet_wrap(~seq_folder) +
+  geom_vline(xintercept = 1000) +
+  labs(fill = "Sample")
+dev.off()
+```
+![UMI_per_Transcript](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/054f68fa-d16d-4253-9194-6580cc236b89)
