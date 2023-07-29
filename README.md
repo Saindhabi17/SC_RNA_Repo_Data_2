@@ -174,7 +174,104 @@ dev.off()
 ```
 ![Mito_expression](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/44017c29-62d1-4854-b473-b658b9a870eb)
 
+```R
+# Joint Filtering- nUMI, nGene and mitoRatio 
+# Visualize the correlation between genes detected and number of UMIs and determine whether strong presence of cells with low numbers of genes/UMIs
+png(filename = "Joint_filtering.png", width = 16, height = 8.135, units = "in", res = 300)
+metadata_2_n %>% 
+  ggplot(aes(x=nUMI, y=nGene, color=mitoRatio)) + 
+  geom_point() + 
+  scale_colour_gradient(low = "gray90", high = "black") +
+  stat_smooth(method=lm) +
+  scale_x_log10() + 
+  scale_y_log10() + 
+  theme_classic() +
+  geom_vline(xintercept = 1000) +
+  geom_hline(yintercept = 500) +
+  facet_wrap(~seq_folder)
+dev.off()
+```
+![Joint_filtering](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/00703859-e9cf-48d2-98b0-20ec869f32c5)
 
+
+# Filtering
+```R
+# Cell level filtering 
+# Filter out low quality cells using selected thresholds - these will change with experiment
+filtered_seurat_data_2_n <- subset(merged_seurat_data_2_n, 
+                          subset= nUMI >= 500 &
+                            nGene >= 250 &
+                            nGene <= 6000 & 
+                            log10GenesPerUMI > 0.80 & 
+                            mitoRatio < 0.10)
+
+# Gene level filtering:
+# Extract counts
+counts_2_n <- GetAssayData(object = filtered_seurat_data_2_n, slot = "counts")
+
+# Output a logical matrix specifying for each gene on whether or not there are more than zero counts per cell
+nonzero_2_n <- counts_2_n > 0
+# Sums all TRUE values and returns TRUE if more than 100 TRUE values per gene
+keep_genes_2_n <- Matrix::rowSums(nonzero_2_n) >= 100
+
+# Only keeping those genes expressed in more than 100 cells
+filtered_counts_2_n <- counts_2_n[keep_genes_2_n, ]
+# Reassign to filtered Seurat object
+filtered_seurat_data_2_n <- CreateSeuratObject(filtered_counts_2_n, meta.data = filtered_seurat_data_2_n@meta.data)
+
+# Create .RData object to load at any time
+save(filtered_seurat_data_2_n, file="seurat_filtered_data_2_n.RData")
+
+# Re assess QC Metric:
+# Save filtered subset to new metadata
+metadata_clean_2_n <- filtered_seurat_data_2_n@meta.data
+
+# to see drop in filtering cells:
+
+met_before_2_n <- data.frame(unclass(table(metadata_2_n$seq_folder)))
+met_before_2_n$QCgroup <- "before"
+met_before_2_n$cell<- rownames(met_before_2_n)
+names(met_before_2_n)[1] <- 'count'
+
+met_after_2_n <- data.frame(unclass(table(metadata_clean_2_n$seq_folder)))
+met_after_2_n$QCgroup <- "after"
+met_after_2_n$cell<- rownames(met_after_2_n)
+names(met_after_2_n)[1] <- 'count'
+# count
+cell_count_2_n <- data.frame(rbind(met_before_2_n, met_after_2_n))
+
+
+# visualization :
+png(filename = "nCells_before_after.png", width = 16, height = 8.135, units = "in", res = 300)
+cell_count_2_n %>% ggplot(aes(x=cell, y=count, fill=QCgroup)) + 
+  geom_bar(stat="identity", position=position_dodge()) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  theme(plot.title = element_text(hjust=0.5, face="bold")) +
+  scale_fill_manual(values = c("#808080", "#FFBF00")) +
+  xlab("samples") +
+  ggtitle("nCells count before and after QC")
+dev.off()
+```
+![nCells_before_after](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/f53a9aaa-9f0e-485f-a2f6-e77d5d730026)
+
+```R
+# Visualize the correlation between genes detected and number of UMIs and determine whether strong presence of cells with low numbers of genes/UMIs
+png(filename = "correlation.png", width = 16, height = 8.135, units = "in", res = 300)
+metadata_clean_2_n %>% 
+  ggplot(aes(x=nUMI, y=nGene, color=mitoRatio)) + 
+  geom_point() + 
+  scale_colour_gradient(low = "gray90", high = "black") +
+  stat_smooth(method=lm) +
+  scale_x_log10() + 
+  scale_y_log10() + 
+  theme_classic() +
+  geom_vline(xintercept = 1000) +
+  geom_hline(yintercept = 500) +
+  facet_wrap(~seq_folder)
+dev.off()
+```
+![correlation](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/9a62138d-6d73-4fda-88f6-a01841f5b329)
 
 
 
