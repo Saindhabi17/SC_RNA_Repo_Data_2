@@ -38,11 +38,21 @@ merged_seurat_data_2_n <- merge(x = SRR9897621,
                               add.cell.id = samples_2_n)
 ```
 ## Quality Control
-
+First, I have explored the metadata of the merged Seurat file. 
 ```
 # Explore merged metadata
 View(merged_seurat_data_2_n@meta.data)
+```
+There are 3 columns in the merged meta data. They are-
 
+1. orig.ident: The first column contains the sample identity as known. By default it shows the value provided for the project argument when loading in the data.
+2. nCount_RNA: This column represents the number of UMIs per cell. UMI (unique molecular identifiers) is used to determine whether a read is a biological or technical duplicate (PCR duplicate). There can be 2 types of duplicates - Biological Duplicates - Reads with different UMIs mapping to the same transcript derived from different molecules, and Technical Duplicates - Reads with the same UMI originated from the same molecule. For the biological duplicates each read should be counted where for the technical duplicates reads should be counted as a single one.
+3. nFeature_RNA: This column represents the number of genes detected per cell.
+
+### Recommended Features to Add to the Metadata
+1. Novelty Score: It is the number of genes detected per UMI. More genes detected per UMI, more complex the data will be.
+2. Mitochondrial Ratio: This metric will give us a percentage of cell reads originating from the mitochondrial genes (coming from dying cells).
+```
 #Add number of genes per UMI for each cell to metadata
 merged_seurat_data_2_n$log10GenesPerUMI <- log10(merged_seurat_data_2_n$nFeature_RNA) / log10(merged_seurat_data_2_n$nCount_RNA)
 
@@ -57,7 +67,6 @@ metadata_2_n$cells <- rownames(metadata_2_n)
 
 # adding sample type to metadata. The orginal file could be download from SRA explorer
 SampleType_n <- c("BC1", "BC3", "BC4", "BC5", "BC6", "BC7")
-
 names(SampleType_n) <- c("SRR9897621", "SRR9897623", "SRR9897624", "SRR9897625", "SRR12539462", "SRR12539463")
 
 metadata_2_n$sampleType <- stringr::str_replace_all(metadata_2_n$orig.ident, SampleType_n)
@@ -92,6 +101,8 @@ bqcc <- metadata_2_n %>%
 dev.off()
 ```
 ### UMI per cell
+Typically, we expect the UMI counts per cell to be higher than 500, which is the lower limit of the expected range. If the UMI counts range between 500-1000, the data is still usable, but deeper sequencing may have been beneficial for these cells.
+
 ```
 # Visualize the number UMIs/transcripts per cell
 png(filename = "UMI_per_Transcript.png", width = 16, height = 8.135, units = "in", res = 300)
@@ -108,7 +119,12 @@ dev.off()
 ```
 ![UMI_per_Transcript](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/054f68fa-d16d-4253-9194-6580cc236b89)
 
+From the plots, it is clear that the cells have way more than 1000 UMI.
+
 ### Genes Detected Per Cell
+In scRNA-seq, the number of genes detected per cell is a crucial quality metric that we expect to be similar to the UMI detection, albeit slightly lower.
+
+For high-quality data, the proportional histogram of genes detected per cell should show a single peak that represents encapsulated cells. However, if there is a small shoulder or a bimodal distribution to the left of the main peak, this could indicate a few things. It could be due to some failed cells or biologically different cell types, such as quiescent cell populations or less complex cells of interest. For instance, larger cells or different cell types may have higher gene counts.
 ```
 # Visualize the distribution of genes detected per cell via histogram
 png(filename = "Genes_detected_per_cell.png", width = 16, height = 8.135, units = "in", res = 300)
@@ -126,6 +142,7 @@ dev.off()
 ![Genes_detected_per_cell](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/5c4230bc-ccbb-4ba3-8e66-9d87aa715325)
 
 ### Novelty Score
+The novelty score, computed as the ratio of nGenes over nUMI, measures the complexity of RNA species in each cell. A low number of genes detected in a cell with many captured transcripts (high nUMI) indicates low complexity or novelty. This could be due to an artifact, contamination, or represent a specific cell type (e.g. red blood cells). A good quality cell typically has a novelty score above 0.80.
 ```
 # Visualize the overall complexity of the gene expression by visualizing the genes detected per UMI (novelty score)
 png(filename = "Novelty_score.png", width = 16, height = 8.135, units = "in", res = 300)
@@ -141,6 +158,7 @@ dev.off()
 ![Novelty_score](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/69083263-55c0-4d58-8f29-26586ae894ba)
 
 ### Mitochondrial Gene Expression Detected per Cell
+High level of expression from mitochondria indicate dying or dead cells. Basically poor quality samples are those that exceed 0.2 mitochondria ratio mark.
 ```
 # Visualize the distribution of mitochondrial gene expression detected per cell
 png(filename = "Mito_expression.png", width = 16, height = 8.135, units = "in", res = 300)
