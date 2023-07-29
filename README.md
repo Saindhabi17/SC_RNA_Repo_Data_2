@@ -8,7 +8,7 @@ This is a new data set with 8 samples. 7 (SRR9897621, SRR14615558, SRR9897623, S
 ### Reading Files: 
 Only the tumour samples are taken in account here. There are 6 samples now. 
 
-```
+```R
 #________________________Reading the files______________________#
 # create list of samples
 samples_data_2_n <- list.files("/Users/andrew/Documents/Saindhabi/Data_2/")
@@ -39,7 +39,7 @@ merged_seurat_data_2_n <- merge(x = SRR9897621,
 ```
 ## Quality Control
 First, I have explored the metadata of the merged Seurat file. 
-```
+```R
 # Explore merged metadata
 View(merged_seurat_data_2_n@meta.data)
 ```
@@ -52,7 +52,7 @@ There are 3 columns in the merged meta data. They are-
 ### Recommended Features to Add to the Metadata
 1. Novelty Score: It is the number of genes detected per UMI. More genes detected per UMI, more complex the data will be.
 2. Mitochondrial Ratio: This metric will give us a percentage of cell reads originating from the mitochondrial genes (coming from dying cells).
-```
+```R
 #Add number of genes per UMI for each cell to metadata
 merged_seurat_data_2_n$log10GenesPerUMI <- log10(merged_seurat_data_2_n$nFeature_RNA) / log10(merged_seurat_data_2_n$nCount_RNA)
 
@@ -88,7 +88,7 @@ save(merged_seurat_data_2_n, file="merged_filtered_seurat_data_2_n.RData")
 ## Visualization
 
 ### Cell counts per sample 
-```
+```R
 # Visualize the number of cell counts per sample
 png(filename = "cell_counts_before_QC.png", width = 16, height = 8.135, units = "in", res = 300)
 bqcc <- metadata_2_n %>% 
@@ -103,7 +103,7 @@ dev.off()
 ### UMI per cell
 Typically, we expect the UMI counts per cell to be higher than 500, which is the lower limit of the expected range. If the UMI counts range between 500-1000, the data is still usable, but deeper sequencing may have been beneficial for these cells.
 
-```
+```R
 # Visualize the number UMIs/transcripts per cell
 png(filename = "UMI_per_Transcript.png", width = 16, height = 8.135, units = "in", res = 300)
 metadata_2_n %>% 
@@ -125,7 +125,7 @@ From the plots, it is clear that the cells have way more than 1000 UMI.
 In scRNA-seq, the number of genes detected per cell is a crucial quality metric that we expect to be similar to the UMI detection, albeit slightly lower.
 
 For high-quality data, the proportional histogram of genes detected per cell should show a single peak that represents encapsulated cells. However, if there is a small shoulder or a bimodal distribution to the left of the main peak, this could indicate a few things. It could be due to some failed cells or biologically different cell types, such as quiescent cell populations or less complex cells of interest. For instance, larger cells or different cell types may have higher gene counts.
-```
+```R
 # Visualize the distribution of genes detected per cell via histogram
 png(filename = "Genes_detected_per_cell.png", width = 16, height = 8.135, units = "in", res = 300)
 metadata_2_n %>% 
@@ -143,7 +143,7 @@ dev.off()
 
 ### Novelty Score
 The novelty score, computed as the ratio of nGenes over nUMI, measures the complexity of RNA species in each cell. A low number of genes detected in a cell with many captured transcripts (high nUMI) indicates low complexity or novelty. This could be due to an artifact, contamination, or represent a specific cell type (e.g. red blood cells). A good quality cell typically has a novelty score above 0.80.
-```
+```R
 # Visualize the overall complexity of the gene expression by visualizing the genes detected per UMI (novelty score)
 png(filename = "Novelty_score.png", width = 16, height = 8.135, units = "in", res = 300)
 metadata_2_n %>%
@@ -159,7 +159,7 @@ dev.off()
 
 ### Mitochondrial Gene Expression Detected per Cell
 High level of expression from mitochondria indicate dying or dead cells. Basically poor quality samples are those that exceed 0.2 mitochondria ratio mark.
-```
+```R
 # Visualize the distribution of mitochondrial gene expression detected per cell
 png(filename = "Mito_expression.png", width = 16, height = 8.135, units = "in", res = 300)
 metadata_2_n %>%
@@ -210,7 +210,7 @@ merged_seurat_data_2 <- merge(x = SRR9897621,
                               add.cell.id = samples_data_2)
 ```
 ## Computing Percentage Mitochondrial Ratio: 
-```
+```R
 # Compute percent mito ratio
 merged_seurat_data_2$mitoRatio <- PercentageFeatureSet(object = merged_seurat_data_2, pattern = "^MT-")
 merged_seurat_data_2$mitoRatio <- merged_seurat_data_2@meta.data$mitoRatio / 100
@@ -221,7 +221,7 @@ merged_seurat_data_2$cells <- rownames(merged_seurat_data_2@meta.data)
 rownames(merged_seurat_data_2@meta.data) <- merged_seurat_data_2@meta.data$cells
 ```
 ## Filteration:
-```
+```R
 # Filteration
 filtered_seurat_data_2 <- subset(merged_seurat_data_2, 
                           subset= nCount_RNA >= 1000 &
@@ -229,7 +229,7 @@ filtered_seurat_data_2 <- subset(merged_seurat_data_2,
                                   mitoRatio < 0.10)
 ```
 ## Normalization and Integration: 
-```
+```R
 #________________________Integration using Harmony____________________________#
 #integration using harmony need sevral steps to be undertaken:
 
@@ -243,7 +243,7 @@ merged_seurat_data_2 <- filtered_seurat_data_2 %>%
 # Calculate PCs using variable features determined by SCTransform (3000 by default)
 merged_seurat_data_2 <- RunPCA(merged_seurat_data_2, assay = "SCT", npcs = 50)
 ```
-```
+```R
 #PC_ 1 
 #Positive:  DCN, CFD, LUM, MT2A, MGP, GSN, COL1A2, FBLN1, CCL2, SFRP2 
 #           IGFBP6, MFAP4, COL1A1, SOD3, COL6A2, COL3A1, CCN1, SERPINF1, C11orf96, IGFBP7 
@@ -284,10 +284,10 @@ merged_seurat_data_2 <- RunPCA(merged_seurat_data_2, assay = "SCT", npcs = 50)
 #           CXCL8, ADIRF, CSTB, PSCA, FCER1G, IL1B, IGHM, CD79A, CCL11, C1QA 
 #           UPK2, S100A6, SPRR3, S100A8, APOE, S100A9, IGFBP5, IGKC, C1QB, SFRP2 
 ```
-```
+```R
 merged_seurat_data_2 <- RunTSNE(merged_seurat_data_2, assay = "SCT", npcs = 50)
 ```
-```
+```R
 # Integration
 #install.packages("harmony")
 
@@ -301,7 +301,7 @@ harmonized_seurat_data_2 <- RunUMAP(harmonized_seurat_data_2, reduction = "harmo
 #harmonized_seurat_data_2 <- RunUTSNE(harmonized_seurat_data_2, reduction = "harmony", assay = "SCT", dims = 1:40)
 ```
 ## Clustering: 
-```
+```R
 #________________________Cluster identification and Inspect the effects of Harmony batch removal ____________#
 
 # to set reduction to harmony and find the clusters
@@ -322,7 +322,7 @@ dev.off()
 ![harmony_UMAP_y_sample_data_2](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/d340fe8a-bc71-4cd6-8b1c-6b4c431d3704)
 
 ## Clusters with Labels: 
-```
+```R
 #________________________SuperCluster Identification____________#
 
 png(filename = "harmony_umap_cluster_with_label_data_2.png", width = 16, height = 8.135, units = "in", res = 300)
@@ -335,7 +335,7 @@ dev.off()
 ![harmony_umap_cluster_with_label_data_2](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/4897f9fc-329e-4053-8d99-10220c2e41c2)
 
 ## Marker Identification: 
-```
+```R
 # let's visualize cells expressing supercluster markers:
 # CD31: PECAM1
 markers <- c("EPCAM", "PECAM1", "COL1A1", "PDGFRA", "RGS5", "CD79A", "LYZ", "CD3D", "TPSAB1")
@@ -354,7 +354,7 @@ dev.off()
 ![umap_superCluster_cells_data_2](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/961b7603-e86e-4883-bf6f-bcb5f12a831c)
 
 ### Visualising All Markers:
-```
+```R
 #______________________________ All markers________________________________
 # Find markers for every cluster compared to all remaining cells, report only the positive ones
 markers_data_2 <- FindAllMarkers(object = harmonized_seurat_data_2, 
@@ -396,7 +396,7 @@ for(cluster in 1:nrow(cluster_markers_10_data_2)){
 }
 ```
 ## Iterate over All Clusters:
-```
+```R
 # Cluster 0
 png(filename = "harmony_blca_clsuter_markers_cluster0_data_2.png", width = 16, height = 8.135, units = "in", res = 300)
 plotList[[1]]
@@ -416,7 +416,7 @@ dev.off()
 [Cluster11](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/commit/e78e7852dba825a293ad641675d6a3bd9d5a079d#r122899698) ; 
 [Cluster12](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/commit/e78e7852dba825a293ad641675d6a3bd9d5a079d#r122899757)
 
-```
+```R
 # LYZ cells
 png(filename = "LYZ_harmony_blca_clsuter_marker_data_2.png", width = 16, height = 8.135, units = "in", res = 300)
 FeaturePlot(object = harmonized_seurat_data_2,
@@ -431,7 +431,7 @@ dev.off()
 ![LYZ_harmony_blca_clsuter_marker_data_2](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/3c177009-e5b0-4b93-bcce-4deb32e0385a)
 
 ## Renaming the Clusters:
-```
+```R
 # renaming clusters
 
 # Rename all identities
