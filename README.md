@@ -273,6 +273,131 @@ dev.off()
 ```
 ![correlation](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/9a62138d-6d73-4fda-88f6-a01841f5b329)
 
+```R
+# Sources of Unwanted Variation:
+
+# Normalizing the counts
+# This normalization method is solely for the purpose of exploring the sources of variation in our data.
+seurat_phase_data_2_n <- NormalizeData(filtered_seurat_data_2_n, normalization.method = "LogNormalize", scale.factor = 10000)
+
+# Loading cell cycle markers
+load("/Users/andrew/Downloads/cycle.rda")
+
+# Scoring cells for cell cycle
+seurat_phase_data_2_n <- CellCycleScoring(seurat_phase_data_2_n, 
+                                 g2m.features = g2m_genes, 
+                                 s.features = s_genes)
+
+# Viewing cell cycle scores and phases assigned to cells                                 
+View(seurat_phase_data_2_n@meta.data) 
+table(seurat_phase_data_2_n$Phase)
+
+# Identifying the most variable genes and scaling them
+seurat_phase_data_2_n <- FindVariableFeatures(seurat_phase_data_2_n, 
+                                     selection.method = "vst", 
+                                     nfeatures = 2000, 
+                                     verbose = TRUE)
+
+# Identifying the 10 most highly variable genes
+top10_data_2_n <- head(VariableFeatures(seurat_phase_data_2_n), 10)
+
+# plotting variable features with and without labels
+
+plot1_2_n <- VariableFeaturePlot(seurat_phase_data_2_n)
+plot2_2_n <- LabelPoints(plot = plot1_2_n, points = top10_data_2_n, repel = TRUE)
+dev.new()
+library(ggplot2)
+ggsave('plot1_2_n.png', plot1_2_n)
+ggsave('plot2_2_n.png', plot2_2_n)
+print(plot2_2_n)
+print(plot1_2_n)
+```
+```R
+# Checking quartile values for mitoRatio, we will use this variable later to mitigate unwanted source of variation in dataset
+summary(seurat_phase_data_2_n@meta.data$mitoRatio)
+
+# Turning mitoRatio into categorical factor vector based on quartile values
+seurat_phase_data_2_n@meta.data$mitoFr <- cut(seurat_phase_data_2_n@meta.data$mitoRatio, 
+                                     breaks=c(-Inf, 0.015, 0.025, 0.045, Inf), 
+                                     labels=c("Low","Medium","Medium high", "High"))
+
+# Scaling the counts
+# This step is essential for PCA , clustering and heatmap generation
+seurat_phase_data_2_n <- ScaleData(seurat_phase_data_2_n)
+saveRDS(seurat_phase_data_2_n, "seurat_phase_data_2_n.rds")
+
+# Performing PCA
+seurat_phase_data_2_n <- RunPCA(seurat_phase_data_2_n)
+
+
+# PC_ 1 
+# Positive:  ADIRF, CSTB, IGFBP3, UCA1, CD24, FTH1, KRT20, SPINK1, PCDH7, FHL2 
+#            ID3, GDF15, LINC01285, BRI3, CRTAC1, GCLC, KRT8, IGFBP2, IGFBP5, TMEM97 
+#            MID1, TRIM31, CAMK2N1, SCHLAP1, HSD17B2, SPOCD1, KRT18, GADD45A, C4orf3, C5orf17 
+# Negative:  S100A8, S100A9, MDM2, MT1X, CRIP1, RAB21, IGKC, DMKN, S100A2, DEFB1 
+#            LINC02484, S100A7, CPM, H19, KRT6A, IGLC2, KRT13, IGHG1, LY6D, DSG3 
+#            CTAG2, IGLC1, AC018816.1, MT2A, LGALS7, SERPINB3, LINC02154, S100A14, SERPINB4, IGHG3 
+# PC_ 2 
+# Positive:  MDM2, DMKN, S100A2, S100A14, S100A8, S100A9, RAB21, S100A16, CRABP2, MT1X 
+#            IFI27, DEFB1, PTN, LINC02484, KRT13, IGKC, KRT6A, HMGCS1, AC018816.1, LY6D 
+#            S100A7, YWHAZ, H19, LINC00355, PPDPF, DSG3, MSMO1, CPM, MUC1, CDK4 
+# Negative:  SRGN, RGS1, HLA-DPB1, VIM, HLA-DPA1, ALOX5AP, C1QC, HLA-DQB1, LAPTM5, C1QA 
+#            CORO1A, C1QB, TYROBP, SAMSN1, CD74, ARHGAP15, HLA-DQA1, HLA-DRB1, FCER1G, CCL4 
+#            MS4A6A, PTPRC, CXCR4, HLA-DRA, DOCK4, CD53, GPR183, FCGR2A, CELF2, ITGB2 
+# PC_ 3 
+# Positive:  LGALS1, NUPR1, PTN, IFI27, FAM25A, GPX3, UPK1B, CRCT1, PRAP1, DMKN 
+#            MDM2, BOK-AS1, DIRC3-AS1, KRT20, TYROBP, S100A8, C1QB, C1QA, KRT33B, APOE 
+#            S100A14, PLA2G2A, AC073114.1, HMGCS1, KRT80, FCER1G, C1QC, ALOX5AP, RGS1, GPNMB 
+# Negative:  HS6ST3, SPINK1, EEF1A1, RBMS3, CYP24A1, FABP4, RPL7, TSHZ2, BCAM, SLC7A11 
+#           NRXN3, CES1, DPP10, SCN11A, RHEX, RPS3A, SLIT3, SCGB3A1, EVA1C, LINC02506 
+#           RACK1, KCTD16, PWRN1, MPPED2, SNHG29, AL109930.1, RPL7A, CNTN3, PELI2, NSG1 
+# PC_ 4 
+# Positive:  IFI27, SCN11A, SERPINE1, MT1X, CCND1, S100A8, RAB21, TIMP3, ELOVL5, SLC35F1 
+#            PHLDA2, DMKN, KYNU, DEFB1, ZFAND2A, FABP5, MDM2, IFITM3, LTO1, HMGCS1 
+#            BMP2, CDK4, LDLR, DNAJB1, WFDC2, KRT13, LINC00511, FDPS, IGKC, LEAP2 
+# Negative:  TFF2, S100A4, TFF1, C10orf99, UPK2, PSORS1C2, FXYD4, NDUFA4L2, CKB, UPK1A 
+#            RNASET2, UPK3A, PNCK, LINC02672, IGFBP2, CSTB, GDF15, ADIRF, FTH1, TFF3 
+#            SNCG, PDE10A, CXCL2, PVALB, TBC1D30, SPINK1, AL158206.1, CXCL8, ZNF350-AS1, CADM1 
+# PC_ 5 
+# Positive:  LRP1B, KRT13, C5orf17, RBMS3, TSHZ2, ERBB4, RIMS2, EVA1C, SLC7A11, NRXN3 
+#            FABP4, SLC35F1, AL589693.1, LINC02506, HS6ST3, DPP10, CES1, AL109930.1, SNHG29, KCTD16 
+#            CYP24A1, NKAIN2, RPL12, DLC1, SLIT3, PDE7B, MPPED2, TRAC, DIRC3-AS1, PELI2 
+# Negative:  CXCL8, SULT1E1, GSTM3, GDF15, LTO1, LEAP2, PLAU, INSIG1, BPGM, CD74 
+#            TMEM97, TTTY14, FTH1, CXCL1, ISG15, UCA1, HMGCS2, CA2, CITED4, HLA-DRB5 
+#            ABTB2, RNASET2, FBLN1, ALDOC, BMP2, GPC5, LCN2, EDN1, HLA-DRA, IFI27
+
+
+# Plotting the PCA colored by cell cycle phase
+no_split_2_n <- DimPlot(seurat_phase_data_2_n,
+                    reduction = "pca",
+                    group.by= "Phase")
+
+no_split_2_n 
+
+with_split_2_n <- DimPlot(seurat_phase_data_2_n,
+                      reduction = "pca",
+                      group.by= "Phase",
+                      split.by= "Phase")
+
+with_split_2_n
+
+no_split_2_n + with_split_2_n
+```
+<img width="958" alt="PCA_dta_2_n" src="https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/92453ace-d508-4dda-9366-892b240f35fe">
+
+```R
+# Mitochondrial Expression:
+# Plotting the PCA colored by mitochondrial expression
+no_split_2_n_mito <- DimPlot(seurat_phase_data_2_n,
+                    reduction = "pca",
+                    group.by= "mitoFr")
+with_split_2_n_mito <- DimPlot(seurat_phase_data_2_n,
+                      reduction = "pca",
+                      group.by= "mitoFr",
+                      split.by= "mitoFr")
+no_split_2_n_mito + with_split_2_n_mito
+```
+
 
 
 ## With the Complete Data Set: (Can be modified upon completing the previous steps) 
