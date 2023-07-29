@@ -397,6 +397,8 @@ with_split_2_n_mito <- DimPlot(seurat_phase_data_2_n,
                       split.by= "mitoFr")
 no_split_2_n_mito + with_split_2_n_mito
 ```
+![Mito_Data_2_n](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/a979b4a7-ddd8-42bc-bbf3-fb5cb0dc34b8)
+
 
 
 
