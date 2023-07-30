@@ -1,11 +1,11 @@
 # SC_RNA_Repo_Data_2
 
 ## About the Dataset: 
-This is a new data set with 8 samples. 7 (SRR9897621, SRR14615558, SRR9897623, SRR9897624, SRR9897625, SRR12539462, SRR12539463) are BLCA samples, 1 () is a normal bladder mucosa sample. Among them, SRR14615558 is a paracancerous tissue sample from BC4, i.e, SRR9897624.   
+This is a new data set with 8 samples. 7 (SRR9897621, SRR14615558, SRR9897623, SRR9897624, SRR9897625, SRR12539462, SRR12539463) are BLCA samples, 1 (SRR12603780) is a normal bladder mucosa sample. Among them, SRR14615558 is a paracancerous tissue sample from BC4, i.e, SRR9897624.   
 
 ## Analysing only the tumours:
 
-### Reading Files: 
+### Reading Files & Preparing Seurat Object: 
 Only the tumour samples are taken in account here. There are 6 samples now. 
 
 ```R
@@ -193,8 +193,15 @@ dev.off()
 ```
 ![Joint_filtering](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/00703859-e9cf-48d2-98b0-20ec869f32c5)
 
+There are samples that shows high-quality cells ; high nUMI, high nGene, low number of cells with high mitoRatio and also there are some samples that would clearely benfit from filtering, as they have low quality cells. We expect to see that dying cells to show high level of mitoRatio and low nUMI and nGene.
 
+Basically, it is not uncommon to observe cells with high numbers of UMIs and nGene with, but also high mitoRatio. These cells may be stressed or damaged, but they could also represent a heterogeneous population of cells with distinct metabolic states.
+
+To investigate the potential cause of high mitochondrial expression ratios, it is important to examine the expression of specific mitochondrial genes and compare them to other genes in the cell. If the expression of mitochondrial genes is elevated relative to other genes, this could suggest mitochondrial dysfunction. Additionally, examining the expression of other stress or damage markers, such as heat shock proteins or cell cycle genes, can also provide insight into the health and state of the cell.
 # Filtering
+
+## The Cell-level Filtering
+-nUMI > 500, -nGene > 250 & < 6000, -log10GenesPerUMI or Novelty Score > 0.8, -mitoRatio < 0.10
 ```R
 # Cell level filtering 
 # Filter out low quality cells using selected thresholds - these will change with experiment
@@ -204,7 +211,10 @@ filtered_seurat_data_2_n <- subset(merged_seurat_data_2_n,
                             nGene <= 6000 & 
                             log10GenesPerUMI > 0.80 & 
                             mitoRatio < 0.10)
-
+```
+## The Gene-level Filtering
+Keeping only genes which are expressed in 100 or more cells (usually this is 10)
+```R
 # Gene level filtering:
 # Extract counts
 counts_2_n <- GetAssayData(object = filtered_seurat_data_2_n, slot = "counts")
@@ -221,8 +231,10 @@ filtered_seurat_data_2_n <- CreateSeuratObject(filtered_counts_2_n, meta.data = 
 
 # Create .RData object to load at any time
 save(filtered_seurat_data_2_n, file="seurat_filtered_data_2_n.RData")
+```
 
-# Re assess QC Metric:
+## Re assess QC Metric:
+```R
 # Save filtered subset to new metadata
 metadata_clean_2_n <- filtered_seurat_data_2_n@meta.data
 
@@ -239,8 +251,9 @@ met_after_2_n$cell<- rownames(met_after_2_n)
 names(met_after_2_n)[1] <- 'count'
 # count
 cell_count_2_n <- data.frame(rbind(met_before_2_n, met_after_2_n))
-
-
+```
+## Visualization of Re-assessment:
+```R
 # visualization :
 png(filename = "nCells_before_after.png", width = 16, height = 8.135, units = "in", res = 300)
 cell_count_2_n %>% ggplot(aes(x=cell, y=count, fill=QCgroup)) + 
@@ -273,6 +286,22 @@ dev.off()
 ```
 ![correlation](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/9a62138d-6d73-4fda-88f6-a01841f5b329)
 
+# Normalization and Regressing Out Unwanted Variation
+The ultimate goal is to define clusters of cells and identify cell types in the samples. To achieve this, there are several steps. The 1st of them is normalization and regressing out the unwanted variation.
+
+The first step is identifying unwanted variability by exploring data and covariates such as cell cycle and mitochondrial gene expression. Both biological source of variation (e.g. effect of cell cycle on transcriptome) and technical source should be explored and account for.
+
+Next we have to normalize and remove unwanted variability using Seurat's SCTransform function. The normalization step is necessary to make expression counts comparable across genes and/or samples. The counts of mapped reads for each gene is proportional to the expression of RNA (“interesting”) in addition to many other factors (“uninteresting” such as sequencing depth and gene length).
+
+Normalization is the process of adjusting raw count values to account for the “uninteresting” factors. For simplicity , normalization is assumed as two step process: scaling and transforming. In scaling the goal is to multiply each UMI count by a cell specific factor to get all cells to have the same UMI counts.For transformation simple approaches like log-transformation showed to be not that useful, especially in the case of genes with high expression but showing decent performance for low/intreemediate expressed genes. So we cannot treat all genes the same. The proposed solution for data transformation is Pearson residuals (inmplemented in Seurat's SCTransform function), which applies a gene-specific weight to each measurement based on the evidence of non-uniform expression across cells. This weight is higher for genes expressed in a smaller fraction of cells, making it useful for detecting rare cell populations. The weight takes into account not just the expression level but also the distribution of expression.
+
+## Exploring sources of unwanted variation
+Here, the goal is to evaluate the effects of cell cycle and mitochondrial expression -
+
+## For Cell Cycle: 
+1. First scoring the cells for cell cycle genes
+2. Then determining whether the cell cycle is a major source of variation in our data set using PCA.
+
 ```R
 # Sources of Unwanted Variation:
 
@@ -291,7 +320,13 @@ seurat_phase_data_2_n <- CellCycleScoring(seurat_phase_data_2_n,
 # Viewing cell cycle scores and phases assigned to cells                                 
 View(seurat_phase_data_2_n@meta.data) 
 table(seurat_phase_data_2_n$Phase)
-
+```
+## Cells in different cell cycle phases -
+1. G1 : 52468
+2. G2M : 15399
+3. S : 31209
+From this, it is clear most of the cells are in G1 and S, which makes sense.
+```R
 # Identifying the most variable genes and scaling them
 seurat_phase_data_2_n <- FindVariableFeatures(seurat_phase_data_2_n, 
                                      selection.method = "vst", 
@@ -328,8 +363,8 @@ saveRDS(seurat_phase_data_2_n, "seurat_phase_data_2_n.rds")
 
 # Performing PCA
 seurat_phase_data_2_n <- RunPCA(seurat_phase_data_2_n)
-
-
+```
+```R
 # PC_ 1 
 # Positive:  ADIRF, CSTB, IGFBP3, UCA1, CD24, FTH1, KRT20, SPINK1, PCDH7, FHL2 
 #            ID3, GDF15, LINC01285, BRI3, CRTAC1, GCLC, KRT8, IGFBP2, IGFBP5, TMEM97 
@@ -365,8 +400,8 @@ seurat_phase_data_2_n <- RunPCA(seurat_phase_data_2_n)
 # Negative:  CXCL8, SULT1E1, GSTM3, GDF15, LTO1, LEAP2, PLAU, INSIG1, BPGM, CD74 
 #            TMEM97, TTTY14, FTH1, CXCL1, ISG15, UCA1, HMGCS2, CA2, CITED4, HLA-DRB5 
 #            ABTB2, RNASET2, FBLN1, ALDOC, BMP2, GPC5, LCN2, EDN1, HLA-DRA, IFI27
-
-
+```
+```R
 # Plotting the PCA colored by cell cycle phase
 no_split_2_n <- DimPlot(seurat_phase_data_2_n,
                     reduction = "pca",
@@ -399,7 +434,19 @@ no_split_2_n_mito + with_split_2_n_mito
 ```
 ![Mito_Data_2_n](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/a979b4a7-ddd8-42bc-bbf3-fb5cb0dc34b8)
 
+Based on the above plots, we can see that cells are scattered regardless of their cell cycle phase and mitochondrial genes expression level. So there is no need to regress out the effect of cell cycle and mitochondrial expression in this dataset.
 
+# SCTransform
+This function is useful for normalization and regressing out sources of unwanted variation at the same time.The method constructs a generalized linear model (GLM) for each gene, using UMI counts as the response variable and sequencing depth as the explanatory variable. To handle the fact that different genes have different levels of expression, information is pooled across genes with similar abundances, resulting in more accurate parameter estimates.
+
+This regularization process yields residuals, which represent effectively normalized data values that are no longer correlated with sequencing depth.
+
+This method is more accurate method of normalizing, estimating the variance of the raw filtered data, and identifying the most variable genes. In practice SCTransform single command replaces ```NormalizeData()```, ```ScaleData()```, and ```FindVariableFeatures()```. Since we have two group of sample we will run SCTransform on each groups after doing "integration".
+
+# Integration
+To improve clustering and downstream analyses, it can be beneficial to integrate or align samples across groups using shared highly variable genes. If cells cluster by sample, condition, batch, dataset, or modalities(scRNA, scATAC-seq), integration can help to remove these unwanted sources of variation.
+
+For example, if we want to integrate normal samples together and BLCA samples together, we should keep each sample as a separate object and transform them accordingly for integration. This is necessary to ensure that the samples are properly aligned and that downstream analyses are meaningful. If cell types are present in one dataset, but not the other, then the cells will still appear as a separate sample-specific cluster.
 
 
 ## With the Complete Data Set: (Can be modified upon completing the previous steps) 
