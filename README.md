@@ -347,6 +347,9 @@ ggsave('plot2_2_n.png', plot2_2_n)
 print(plot2_2_n)
 print(plot1_2_n)
 ```
+<img width="956" alt="Plot_1_data_2_n" src="https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/8ce6408b-b102-4c07-9ba5-13b7037c8caa">
+<img width="959" alt="Plot_2_Data_2_n" src="https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/36118f3f-7f3c-497e-a98f-09351e6a2b19">
+
 ```R
 # Checking quartile values for mitoRatio, we will use this variable later to mitigate unwanted source of variation in dataset
 summary(seurat_phase_data_2_n@meta.data$mitoRatio)
@@ -540,6 +543,220 @@ split_seurat_data_2_n$BC1@assays
 # SCTAssay data with 19756 features for 7219 cells, and 1 SCTModel(s) 
 # Top 10 variable features:
 # CCL5, SPP1, APOE, IGFL1, TYROBP, C1QB, CCL4, CCL3, CCL4L2, HLA-DRA 
+```
+## Check for Integration
+After normalization and integration, we can proceed to PCA and UMAP/t-SNE to see effect of integration.
+
+```R
+# Running PCA
+seurat_integrated_data_2_n <- RunPCA(object = seurat_integrated_data_2_n, verbose = TRUE)
+```
+The PC's are: 
+```R
+# PC_ 1 
+# Positive:  S100A6, ADIRF, CSTB, SPINK1, RPLP0, RPS6, TFF1, ID1, S100P, LY6D 
+#            S100A2, KRT19, FXYD3, CKB, TFF2, KRT17, NDUFA4L2, GPX2, CLDN4, RPL41 
+#            MIF, KRT7, RHEX, H19, C10orf99, RPS18, RPL39, GAPDH, MGST1, AGR2 
+# Negative:  HLA-DRA, CD74, HLA-DPB1, HLA-DRB1, SRGN, TYROBP, HLA-DPA1, VIM, HLA-DQB1, AIF1 
+#            FCER1G, RGS1, C1QB, C1QA, APOE, HLA-DQA1, CCL4, ALOX5AP, C1QC, GPR183 
+#            DOCK4, CCL3, CCL4L2, B2M, LGALS1, APOC1, IFI30, MS4A6A, CHST11, CD83 
+# PC_ 2 
+# Positive:  HLA-DRA, FTL, CD74, C1QB, HLA-DQB1, C1QA, AIF1, HLA-DRB1, TYROBP, HLA-DPA1 
+#            HLA-DQA1, C1QC, HLA-DPB1, FCER1G, APOE, APOC1, LYZ, IFI30, MS4A6A, DOCK4 
+#            ALOX5AP, LGALS1, RNASE6, CXCL8, FTH1, LST1, MEF2C, LY86, YWHAH, CD86 
+# Negative:  CCL5, FYN, NKG7, P2RY8, GNLY, TRAC, GNG2, CD247, KLRB1, SLA2 
+#            CXCR4, CD7, RNF125, CD52, B2M, SYTL3, GZMA, GZMB, CD3D, SRGN 
+#            STAT4, IFITM2, CD69, GZMM, CD2, PPP1R16B, GZMH, ARHGAP15, SPOCK2, IL7R 
+# PC_ 3 
+# Positive:  MALAT1, HSPA1A, NEAT1, FOS, JUN, HSPA6, HSPA1B, DNAJB1, EGR1, CCSER1 
+#            HSP90AA1, ZSWIM6, PDE4D, PTPRM, HSPH1, MECOM, TEX14, ID2, DUSP1, ACER2 
+#            INTS6, ADAMTSL4-AS1, HES1, LINC00511, SIK3, MDM2, ZFAND2A, ID1, IER2, SQSTM1 
+# Negative:  TMSB4X, S100A9, RPL10, RPL39, RPS6, RPL34, RPL41, RPS18, S100A6, RPL21 
+#            RPLP1, RPS27, RPL26, RPS4X, RPS14, RPL7, RPS15A, RPL13A, RPS27A, RPL13 
+#            RPS8, FTH1, S100A11, SPINK1, EEF1A1, LCN2, RPS19, C1orf56, ADIRF, RPLP0 
+# PC_ 4 
+# Positive:  CXCL8, FTH1, CXCL1, CXCL2, S100A9, AREG, LCN2, NFKBIA, CXCL3, CCL20 
+#            NFKB1, PLAUR, SAT1, GDF15, PIGR, PPP1R15A, MAP3K8, SOD2, TNFAIP3, IER3 
+#            NEDD4L, SLPI, MT-CO1, MYO1E, MACC1, KLF6, DENND2C, BTG1, TJP1, ZSWIM6 
+# Negative:  ID1, HSPA1A, MIR205HG, HSP90AA1, ITM2B, TXNIP, TP63, PLXDC2, AL627171.2, HSP90AB1 
+#            S100A2, HMGB1, VAV3, PTMA, ID3, HSPA1B, IL33, AQP3, RPL7, DLEU2 
+#            FABP5, RHEX, HSPA6, RPS27A, CLCA2, FAM162A, AKR1C3, ARHGAP6, SLC14A1, AGR2 
+# PC_ 5 
+# Positive:  HSPA1A, SPINK1, S100A9, LCN2, HSPA6, HSPA1B, SLPI, MMP7, B2M, PIGR 
+#            HSP90AA1, CXCL8, FXYD4, UPK1A, DNAJB1, JUN, CXCL1, UPK3A, IFI27, PSCA 
+#            UBC, FOS, KRT19, DUSP1, ADIRF, UPK2, SAA1, KRT18, UBB, KRT8 
+# Negative:  FTH1, FTL, RPLP1, RPL41, RPS2, RPL10, RPL13, MID1, IGFBP5, LINC00511 
+#            RPS18, EEF1A1, NEAT1, MAST4, RPL39, PDE10A, MT-ND1, RPL13A, RPLP0, SOS1 
+#            RPS6, NDRG1, RPS14, RPS4X, FAM160A1, NDUFA4L2, MT-CO2, EXT1, C11orf96, DENND2C 
+```
+## Plotting PCA:
+```R
+# Plotting PCA
+png(filename = "PCA_integrated_data_2_n.png", width = 16, height = 8.135, units = "in", res = 300)
+PCAPlot(seurat_integrated_data_2_n)
+dev.off()
+```
+![PCA_integrated_data_2_n](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/560ea312-a012-492f-9ae2-c744a6779e21)
+
+## Visualizing seurat_integrated:
+```R
+seurat_integrated_data_2_n
+```
+```R
+# An object of class Seurat 
+# 43732 features across 99076 samples within 3 assays 
+# Active assay: integrated (3000 features, 3000 variable features)
+# 2 other assays present: RNA, SCT
+# 1 dimensional reduction calculated: pca
+```
+# Clustering:
+After integration, clustering of cells is done based on similarity of gene expression profiles using Seurat's PCA scores.
+
+Next, cluster quality is evaluated by checking for sources of uninteresting variation, principal component influence, and exploring cell type identities using known markers.
+
+## Plotting UMAP
+```R
+# Plotting UMAP 
+# Run UMAP
+seurat_integrated_data_2_n <- RunUMAP(seurat_integrated_data_2_n, 
+                             dims = 1:40,
+                             reduction = "pca",
+                             verbose = TRUE)
+
+# Plot UMAP , all samples together
+png(filename = "UMAP_integrated_1_data_2_n.png", width = 16, height = 8.135, units = "in", res = 300)
+DimPlot(seurat_integrated_data_2_n)
+dev.off()
+```
+![UMAP_integrated_1_data_2_n](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/e40364c5-ad49-486b-8973-7666889db7d8)
+
+```R
+# Plot UMAP, splitting by samples
+png(filename = "UMAP_integrated_data_2_n.png", width = 16, height = 8.135, units = "in", res = 300)
+DimPlot(seurat_integrated_data_2_n , split.by = "sample")
+dev.off()
+```
+![UMAP_integrated_data_2_n](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/4cbb06a0-8dfd-4339-93fb-a528f4b498dd)
+
+## Clustering Cells Based on Top PCs (Metagenes)
+### Identify significant PCs
+For new method like ```SCTransform``` it is not needed to calculate the number of PCs for clustering. However older methods could not efficiently removed technical biases , so using them it was necessary to have some idea about the number of PCs that can capture most of information in the dataset.
+
+### Exploring heatmap of PCs
+```R
+# Exploring heatmap of PCs
+png(filename = "heatmap_integrated_2_Data_2_n.png", width = 16, height = 8.135, units = "in", res = 300)
+DimHeatmap(seurat_integrated_data_2_n, 
+           dims = 1:9, 
+           cells = 500, 
+           balanced = TRUE)
+dev.off()
+```
+![heatmap_integrated_2_Data_2_n](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/31917ecf-7f45-4028-8b96-4825a4bf971e)
+
+## Printing out the most variable genes driving PCs
+```R
+# Printing out the most variable genes driving PCs
+print(x = seurat_integrated_data_2_n[["pca"]], 
+      dims = 1:10, 
+      nfeatures = 5)
+```
+```R
+# PC_ 1 
+# Positive:  S100A6, ADIRF, CSTB, SPINK1, RPLP0 
+# Negative:  HLA-DRA, CD74, HLA-DPB1, HLA-DRB1, SRGN 
+# PC_ 2 
+# Positive:  HLA-DRA, FTL, CD74, C1QB, HLA-DQB1 
+# Negative:  CCL5, FYN, NKG7, P2RY8, GNLY 
+# PC_ 3 
+# Positive:  MALAT1, HSPA1A, NEAT1, FOS, JUN 
+# Negative:  TMSB4X, S100A9, RPL10, RPL39, RPS6 
+# PC_ 4 
+# Positive:  CXCL8, FTH1, CXCL1, CXCL2, S100A9 
+# Negative:  ID1, HSPA1A, MIR205HG, HSP90AA1, ITM2B 
+# PC_ 5 
+# Positive:  HSPA1A, SPINK1, S100A9, LCN2, HSPA6 
+# Negative:  FTH1, FTL, RPLP1, RPL41, RPS2 
+# PC_ 6 
+# Positive:  MALAT1, RHEX, PDE4D, MECOM, CXCL1 
+# Negative:  FTH1, FOS, HSPA6, GAPDH, FTL 
+# PC_ 7 
+# Positive:  FTH1, CSTB, B2M, CKB, UCA1 
+# Negative:  RPL10, RPS18, HSPA1A, HSPA6, RPS4X 
+# PC_ 8 
+# Positive:  S100B, HLA-DPA1, HLA-DPB1, HLA-DRA, LTB 
+# Negative:  CCL4, CCL4L2, CCL3, CCL3L1, IL1B 
+# PC_ 9 
+# Positive:  SPINK1, ADIRF, PSCA, UPK1A, FXYD4 
+# Negative:  S100A2, KRT17, IGFBP7, TAGLN, MT2A 
+# PC_ 10 
+# Positive:  KRT13, ALDH3A1, LY6D, AREG, GPX2 
+# Negative:  HILPDA, FTH1, UCA1, MALAT1, DDIT4 
+```
+### Determining how many Pcs should be considered for clustering
+```R
+# To determine how many Pcs should be considered for clustering:
+# Plotting the elbow plot
+png(filename = "elbow_data_2_n.png", width = 16, height = 8.135, units = "in", res = 300)
+ElbowPlot(object = seurat_integrated_data_2_n, 
+          ndims = 40)
+dev.off()
+```
+![elbow_data_2_n](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/c2321a04-a5e9-4eba-91b6-f201670a0b34)
+### Some Quantitative Analysis: 
+
+```R
+# to make it more quantitative :
+# Determining percent of variation associated with each PC
+pct_2_n <- seurat_integrated_data_2_n[["pca"]]@stdev / sum(seurat_integrated_data_2_n[["pca"]]@stdev) * 100
+pct_2_n
+```
+```R
+# [1] 8.231842 5.357979 3.787759 3.329899 3.201038 2.921874 2.788286 2.606379 2.536098
+# [10] 2.346710 2.260682 2.217225 2.061355 1.991646 1.973236 1.941803 1.853762 1.757311
+# [19] 1.730126 1.676847 1.642472 1.632051 1.599613 1.593734 1.573000 1.537271 1.532732
+# [28] 1.508533 1.501233 1.487122 1.475194 1.455223 1.452645 1.447709 1.431554 1.418433
+# [37] 1.413950 1.412272 1.394761 1.389583 1.385362 1.382016 1.363861 1.360519 1.358901
+# [46] 1.350882 1.340311 1.338283 1.326910 1.322007
+```
+```R
+# Calculate cumulative percents for each PC
+cumu_2_n <- cumsum(pct_2_n)
+cumu_2_n
+```
+```R
+# [1]   8.231842  13.589821  17.377580  20.707479  23.908518  26.830391  29.618677  32.225057
+# [9]  34.761155  37.107865  39.368547  41.585772  43.647127  45.638773  47.612009  49.553813
+# [17]  51.407575  53.164886  54.895012  56.571859  58.214331  59.846382  61.445996  63.039730
+# [25]  64.612730  66.150001  67.682733  69.191266  70.692499  72.179622  73.654815  75.110038
+# [33]  76.562684  78.010393  79.441948  80.860380  82.274330  83.686602  85.081364  86.470947
+# [41]  87.856309  89.238325  90.602186  91.962705  93.321606  94.672488  96.012800  97.351083
+# [49]  98.677993 100.000000
+```
+```R
+# Determine which PC exhibits cumulative percent greater than 90% and % variation associated with the PC as less than 5
+co1_2_n <- which(cumu_2_n > 90 & pct_2_n < 5)[1]
+co1_2_n
+```
+```R
+# 43
+```
+```R
+# Determine the difference between variation of PC and subsequent PC
+co2_2_n <- sort(which((pct_2_n[1:length(pct_2_n) - 1] - pct_2_n[2:length(pct_2_n)]) > 0.1), decreasing = T)[1] + 1
+# last point where change of % of variation is more than 0.1%.
+co2_2_n
+```
+```R
+# 13
+```
+```R
+# Minimum of the two calculation is the optimal number of PC to pick.
+pcs_2_n <- min(co1_2_n, co2_2_n)
+pcs_2_n
+```
+```R
+# 13
 ```
 
 ## With the Complete Data Set: (Can be modified upon completing the previous steps) 
