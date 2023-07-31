@@ -528,7 +528,18 @@ seurat_integrated_data_2_n <- IntegrateData(anchorset = integ_anchors_data_2_n,
                                    normalization.method = "SCT")
 
 # Checking assays in the object:
-split_seurat_data_2_n$Normal@assays
+split_seurat_data_2_n$BC1@assays
+```
+```R
+# $RNA
+# Assay data with 20366 features for 7219 cells
+# Top 10 variable features:
+# PI3, CRCT1, CXCL14, SPP1, LUM, IGFL1, TAGLN, ACTA2, CCL3L1, COL1A1 
+
+# $SCT
+# SCTAssay data with 19756 features for 7219 cells, and 1 SCTModel(s) 
+# Top 10 variable features:
+# CCL5, SPP1, APOE, IGFL1, TYROBP, C1QB, CCL4, CCL3, CCL4L2, HLA-DRA 
 ```
 
 ## With the Complete Data Set: (Can be modified upon completing the previous steps) 
