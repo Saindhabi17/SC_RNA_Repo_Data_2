@@ -448,6 +448,88 @@ To improve clustering and downstream analyses, it can be beneficial to integrate
 
 For example, if we want to integrate normal samples together and BLCA samples together, we should keep each sample as a separate object and transform them accordingly for integration. This is necessary to ensure that the samples are properly aligned and that downstream analyses are meaningful. If cell types are present in one dataset, but not the other, then the cells will still appear as a separate sample-specific cluster.
 
+```R
+# Integration
+# Adjusting the limit for allowable object sizes within R
+options(future.globals.maxSize = 4000 * 1024^2)
+
+# Splitting Seurat object by group
+split_seurat_data_2_n <- SplitObject(seurat_phase_data_2_n, split.by = "sample")
+
+# then normalizing by SCTansform
+for (i in 1:length(split_seurat_data_2_n)) {
+  split_seurat_data_2_n[[i]] <- SCTransform(split_seurat_data_2_n[[i]], vars.to.regress = c("mitoRatio", "S.Score", "G2M.Score"))
+}
+
+# Visualizing the object:
+  
+# to see what the component of the object are. 
+split_seurat_data_2_n
+```
+```R
+# $BC1
+# An object of class Seurat 
+# 40122 features across 7219 samples within 2 assays 
+# Active assay: SCT (19756 features, 3000 variable features)
+# 1 other assay present: RNA
+# 1 dimensional reduction calculated: pca
+
+# $BC3
+# An object of class Seurat 
+# 40178 features across 26269 samples within 2 assays 
+# Active assay: SCT (19812 features, 3000 variable features)
+# 1 other assay present: RNA
+# 1 dimensional reduction calculated: pca
+
+# $BC4
+# An object of class Seurat 
+# 40117 features across 32261 samples within 2 assays 
+# Active assay: SCT (19751 features, 3000 variable features)
+# 1 other assay present: RNA
+# 1 dimensional reduction calculated: pca
+
+# $BC5
+# An object of class Seurat 
+# 40195 features across 9810 samples within 2 assays 
+# Active assay: SCT (19829 features, 3000 variable features)
+# 1 other assay present: RNA
+# 1 dimensional reduction calculated: pca
+
+# $BC6
+# An object of class Seurat 
+# 39838 features across 7338 samples within 2 assays 
+# Active assay: SCT (19472 features, 3000 variable features)
+# 1 other assay present: RNA
+# 1 dimensional reduction calculated: pca
+
+# $BC7
+# An object of class Seurat 
+# 40160 features across 16179 samples within 2 assays 
+# Active assay: SCT (19794 features, 3000 variable features)
+# 1 other assay present: RNA
+# 1 dimensional reduction calculated: pca
+```
+```R
+# Selecting the most variable features to use for integration
+integ_features_data_2_n <- SelectIntegrationFeatures(object.list = split_seurat_data_2_n, 
+                                            nfeatures = 3000) 
+
+
+# Preparing the SCT list object for integration
+split_seurat_data_2_n <- PrepSCTIntegration(object.list = split_seurat_data_2_n, 
+                                   anchor.features = integ_features_data_2_n)
+
+# Finding best buddies (using canonical correlation analysis or CCA) - can take a while to run
+integ_anchors_data_2_n <- FindIntegrationAnchors(object.list = split_seurat_data_2_n, 
+                                        normalization.method = "SCT", 
+                                        anchor.features = integ_features_data_2_n)
+# Integrating across conditions
+seurat_integrated_data_2_n <- IntegrateData(anchorset = integ_anchors_data_2_n, 
+                                   normalization.method = "SCT")
+
+# Checking assays in the object:
+split_seurat_data_2_n$Normal@assays
+```
 
 ## With the Complete Data Set: (Can be modified upon completing the previous steps) 
 Here all the 8 samples are used. 
