@@ -857,7 +857,7 @@ dev.off()
 
 
 ## Segregation of clusters by various sources of uninteresting variation
-We expect to see a uniform coluring for all variables in all clusters. Sometimes this is not the case. Like here nUMI and nGene showing higher value is some clusters. We have to watch these cluster and inspect them in terms of type of cell therein. So that may explain some of the variation that we are seeing.
+We expect to see a uniform coluring for all variables in all clusters. Sometimes this is not the case. Like here ```nUMI``` and ```nGene``` showing higher value is some clusters. We have to watch these cluster and inspect them in terms of type of cell therein. So that may explain some of the variation that we are seeing.
 
 ```R
 # Determining metrics to plot present in seurat_integrated@meta.data
@@ -873,8 +873,82 @@ FeaturePlot(seurat_integrated_data_2_n,
 dev.off()
 ```
 ![umap_unwanted_source_clustering_2_n](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/eb438f8c-22d2-4a87-b88a-aa6d1a440e8a)
+```R
+# Defining the information in the seurat object of interest
+columns_2_n <- c(paste0("PC_", 1:15),
+             "ident",
+             "UMAP_1", "UMAP_2")
 
-       
+# Extracting this data from the seurat object
+pc_data_2_n <- FetchData(seurat_integrated_data_2_n, 
+                     vars = columns_2_n)
+
+# Adding cluster label to center of cluster on UMAP
+umap_label_2_n <- FetchData(seurat_integrated_data_2_n, 
+                        vars = c("ident", "UMAP_1", "UMAP_2"))  %>%
+  group_by(ident) %>%
+  summarise(x=mean(UMAP_1), y=mean(UMAP_2))
+
+# Plotting a UMAP plot for each of the PCs
+library(cowplot)
+library(tidyverse)
+library(HGNChelper)
+
+png(filename = "umap_on_pcs_2_n.png", width = 16, height = 8.135, units = "in", res = 300)
+map(paste0("PC_", 1:15), function(pc){
+  ggplot(pc_data_2_n, 
+         aes(UMAP_1, UMAP_2)) +
+    geom_point(aes_string(color=pc), 
+               alpha = 0.7) +
+    scale_color_gradient(guide = FALSE, 
+                         low = "grey90", 
+                         high = "blue")  +
+    geom_text(data=umap_label_2_n, 
+              aes(label=ident, x, y)) +
+    ggtitle(pc)
+}) %>% 
+  plot_grid(plotlist = .)
+dev.off()
+```
+![umap_on_pcs_2_n](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/e0a83ba7-ba46-48dd-a213-83a78777d786)
+
+```R
+# Examine PCA results 
+print(seurat_integrated_data_2_n[["pca"]], dims = 1:5, nfeatures = 5)
+```
+```R
+# PC_ 1 
+# Positive:  S100A6, ADIRF, CSTB, SPINK1, RPLP0 
+# Negative:  HLA-DRA, CD74, HLA-DPB1, HLA-DRB1, SRGN 
+# PC_ 2 
+# Positive:  HLA-DRA, FTL, CD74, C1QB, HLA-DQB1 
+# Negative:  CCL5, FYN, NKG7, P2RY8, GNLY 
+# PC_ 3 
+# Positive:  MALAT1, HSPA1A, NEAT1, FOS, JUN 
+# Negative:  TMSB4X, S100A9, RPL10, RPL39, RPS6 
+# PC_ 4 
+# Positive:  CXCL8, FTH1, CXCL1, CXCL2, S100A9 
+# Negative:  ID1, HSPA1A, MIR205HG, HSP90AA1, ITM2B 
+# PC_ 5 
+# Positive:  HSPA1A, SPINK1, S100A9, LCN2, HSPA6 
+# Negative:  FTH1, FTL, RPLP1, RPL41, RPS2 
+```
+```R
+# let's visualize cells expressing super cluster markers:
+# CD31: PECAM1
+markers <- c("EPCAM", "PECAM1", "COL1A1", "PDGFRA", "RGS5", "CD79A", "LYZ", "CD3D", "TPSAB1")
+
+png(filename = "umap_superCluster_cells_2_n.png", width = 16, height = 8.135, units = "in", res = 300)
+FeaturePlot(object = seurat_integrated_data_2_n,
+            features = markers,
+            order = TRUE,
+            min.cutoff = "q10",
+            label = TRUE,
+            repel = TRUE)
+
+dev.off()
+```              
+![umap_superCluster_cells_2_n](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/266f2664-33f6-4406-8d82-b7584672d2a6)
 
 
 
