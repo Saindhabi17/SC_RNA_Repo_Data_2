@@ -758,6 +758,7 @@ pcs_2_n
 ```R
 # 13
 ```
+# Clustering of the Cells - Visualization 
 ```R
 # to check what is active assay
 DefaultAssay(object = seurat_integrated_data_2_n) 
@@ -786,6 +787,96 @@ DimPlot(seurat_integrated_data_2_n,
 dev.off()
 ```
 ![umap_cluster_with_label_3_2_n_res0 15](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/8183868b-7654-49d6-b558-990b798e5787)
+```R
+#saving the file for further use
+save(seurat_integrated_data_2_n, file="seurat_integrated_data_2_n.RData")
+```
+# Clustering Quality Control
+After clustering, we need to make sure that the assigned clusters are true representative of biological clusters (cell clusters) not due to technical or unwanted source of variation (like cell cycle stages). Also , in this step we need to identify cell type for each cluster based on the known cell type markers.
+
+## Segregation of clusters by sample
+```R
+# Extracting identity and sample information from seurat object to determine the number of cells per cluster per sample
+library(dplyr)
+library(tidyr) 
+
+n_cells_2_n <- FetchData(seurat_integrated_data_2_n, 
+                     vars = c("ident", "orig.ident"))
+n_cells_2_n <- dplyr::count(n_cells_2_n, ident, orig.ident)
+n_cells_2_n <- tidyr::spread(n_cells_2_n, ident, n)
+
+# Adding sample data from paper; we expect to see samples from same group have more or less similar number of cells in each cluster. 
+# So normal samples should show similar patterns: SRR12603780, SRR12603781, and SRR12603788.
+
+sampleData_2_n<- data.frame(tibble::tribble(
+  ~sample_id, ~gender, ~age, ~Grade, ~Basal_or_Luminal, ~Surgery_Type, ~Tumor_size_cm,
+  "SRR9897621",     "M",  67L,  "low", "Luminal",       "TURBT",          "<3cm",
+  "SRR9897622",     "M",  67L,  "high", "Luminal",       "RC",          "<3cm",
+  "SRR9897623",     "M",  38L, "high", "Luminal",  "TURBT",          ">3cm",
+  "SRR9897624",     "M",  80L, "high", "Basal",  "RC",          "<3cm",
+  "SRR9897625",     "M",  81L, "high",    "Luminal",  "RC",          "<3cm",
+  "SRR12539462",     "M",  58L, "low",    "luminal",  "TURBT",          "<3cm",
+  "SRR12539463",     "M",  66L, "low",    "Luminal",  "TURBT",          "<3cm",
+))
+
+tmp_df_2_n<- seurat_integrated_data_2_n@meta.data
+merged_df_2_n <- merge(tmp_df_2_n, sampleData_2_n, 
+                   by.x = "orig.ident", 
+                   by.y = "sample_id", 
+                   all.x = TRUE)
+seurat_integrated_data_2_n@meta.data<-merged_df_2_n
+rownames(seurat_integrated_data_2_n@meta.data) <- seurat_integrated_data_2_n@meta.data$cells
+
+# Viewing table
+head(n_cells_2_n)
+
+# saving objects (to mark where and when we stored the file)
+saveRDS(seurat_integrated_data_2_n, "seurat_integrated_new_data_2_n.RDS")
+
+# UMAP of cells in each cluster by sample
+# This would allow us to see condition specefic clusters
+png(filename = "umap_cluster_sample_2_n.png", width = 16, height = 8.135, units = "in", res = 300)
+DimPlot(seurat_integrated_data_2_n, 
+        label = TRUE, 
+        split.by = "sample")  + NoLegend()
+dev.off()
+```
+![umap_cluster_sample_2_n](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/f4255064-07bf-4b3c-a66a-475940f17d99)
+
+
+## Segregation of clusters by cell cycle phase (unwanted source of variation)
+```R
+# Exploring whether clusters segregate by cell cycle phase
+png(filename = "umap_cluster_cell_cycle_2_n.png", width = 16, height = 8.135, units = "in", res = 300)
+DimPlot(seurat_integrated_data_2_n,
+        label = TRUE, 
+        split.by = "Phase")  + NoLegend()
+dev.off()
+```
+![umap_cluster_cell_cycle_2_n](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/7882bd82-eb76-47d2-81cc-9b71b883be9c)
+
+
+## Segregation of clusters by various sources of uninteresting variation
+We expect to see a uniform coluring for all variables in all clusters. Sometimes this is not the case. Like here nUMI and nGene showing higher value is some clusters. We have to watch these cluster and inspect them in terms of type of cell therein. So that may explain some of the variation that we are seeing.
+
+```R
+# Determining metrics to plot present in seurat_integrated@meta.data
+metrics_2_n <-  c("nUMI", "nGene", "S.Score", "G2M.Score", "mitoRatio")
+png(filename = "umap_unwanted_source_clustering_2_n.png", width = 16, height = 8.135, units = "in", res = 300)
+FeaturePlot(seurat_integrated_data_2_n, 
+            reduction = "umap", 
+            features = metrics_2_n,
+            pt.size = 0.4, 
+            order = TRUE,
+            min.cutoff = 'q10',
+            label = TRUE)
+dev.off()
+```
+![umap_unwanted_source_clustering_2_n](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/eb438f8c-22d2-4a87-b88a-aa6d1a440e8a)
+
+       
+
+
 
 
 ## With the Complete Data Set: (Can be modified upon completing the previous steps) 
