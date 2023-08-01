@@ -758,6 +758,35 @@ pcs_2_n
 ```R
 # 13
 ```
+```R
+# to check what is active assay
+DefaultAssay(object = seurat_integrated_data_2_n) 
+
+# Determining the K-nearest neighbor graph
+seurat_integrated_data_2_n <- FindNeighbors(object = seurat_integrated_data_2_n, 
+                                   dims = 1:18)
+
+#Find clusters
+# Determining the clusters for various resolutions                                
+seurat_integrated_data_2_n <- FindClusters(object = seurat_integrated_data_2_n,
+                                  resolution = c(0.05, 0.07, 0.1, 0.15, 0.17, 0.19, 0.2, 0.4, 0.6, 0.8, 1.0, 1.4))
+
+# Exploring resolutions
+head(seurat_integrated_data_2_n@meta.data)
+
+# Assigning identity of clusters
+Idents(object = seurat_integrated_data_2_n) <- "integrated_snn_res.0.15"
+
+# Plotting the UMAP
+png(filename = "umap_cluster_with_label_5_2_n.png", width = 16, height = 8.135, units = "in", res = 300)
+DimPlot(seurat_integrated_data_2_n,
+        reduction = "umap",
+        label = TRUE,
+        label.size = 6)
+dev.off()
+```
+![umap_cluster_with_label_3_2_n_res0 15](https://github.com/Saindhabi17/SC_RNA_Repo_Data_2/assets/133680893/8183868b-7654-49d6-b558-990b798e5787)
+
 
 ## With the Complete Data Set: (Can be modified upon completing the previous steps) 
 Here all the 8 samples are used. 
