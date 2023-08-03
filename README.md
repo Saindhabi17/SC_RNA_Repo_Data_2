@@ -1,5 +1,59 @@
 # SC_RNA_Repo_Data_2
 
+## Single Cell RNA-seq Clustering Workflow:
+
+The steps of analysis are- 
+1. Sequence Reads
+2. Generate Count Matrix
+3. Filter Cells Using Quality Metrics
+4. Normalize Data & Regress-out Unwanted Variation
+5. Integration
+6. Clustering
+7. Marker Identification
+8. (a) Trajectory Analysis
+   
+   (b) DE of Cell Types or Genes Between Sample Groups
+   
+   (c) Custom Analyses
+   
+The Packages I installed with the libraries are listed here: 
+```R
+# PACKAGES: 
+
+install.packages('BiocManager')
+
+install.packages("Seurat")
+library("Seurat")
+install.packages("tidyverse")
+library("tidyverse")
+install.packages("patchwork")
+library("patchwork")
+install.packages("cowplot")
+library("cowplot")
+install.packages("HGNChelper")
+library("HGNChelper")
+install.packages("harmony")
+library("harmony")
+
+install.packages("dplyr")
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+BiocManager::install('multtest')
+BiocManager::install("ensembldb")
+BiocManager::install("GenomicFeatures")
+install.packages("GenomicFeatures")
+BiocManager::install("MatrixGenerics")
+install.packages('metap')
+library("metap")
+library("AnnotationHub")
+library("ensembldb")
+library("GenomicFeatures")
+library("MatrixGenerics")
+```
+
+
 ## About the Dataset: 
 This is a new data set with 8 samples. 7 (SRR9897621, SRR14615558, SRR9897623, SRR9897624, SRR9897625, SRR12539462, SRR12539463) are BLCA samples, 1 (SRR12603780) is a normal bladder mucosa sample. Among them, SRR14615558 is a paracancerous tissue sample from BC4, i.e, SRR9897624.   
 
@@ -953,7 +1007,7 @@ dev.off()
 
 
 
-## With the Complete Data Set: (Can be modified upon completing the previous steps) 
+## With the Complete Data Set: (Including the Normal one and the Paracancerous one) 
 Here all the 8 samples are used. 
 
 ## Reading the Files and Preparing Seurat Object: 
